@@ -3,597 +3,1106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中国教育数据仪表盘</title>
+<title>中国宏观经济数据仪表盘</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
-  --font-serif: "Noto Serif SC","Source Han Serif SC","思源宋体","华文宋体","SimSun",Georgia,serif;
-  --font-mono: "JetBrains Mono","Source Code Pro","Consolas","Courier New",monospace;
-  --bg:#F8F5F0; --bg2:#F0EBE3; --bg3:#E8E2D8;
-  --ink:#1A1A2E; --ink2:#3D3D5C; --ink3:#666;
-  --line:#DDD5C8; --line2:#EAE4DC;
-  --red:#C0392B; --red2:#E74C3C;
-  --gold:#B8860B; --gold2:#D4A017;
-  --blue:#00ADEF; --blue2:#0090C8; --blue3:#D6EEF8;
-  --orange:#E8734A; --orange2:#C05530;
-  --green:#27AE60;
-  --mono:var(--font-mono);
-  --serif:var(--font-serif);
+  --bg: #0E1117;
+  --bg2: #161B24;
+  --bg3: #1E2535;
+  --line: #2A3347;
+  --blue: #3B82F6;
+  --blue-lt: rgba(59,130,246,0.12);
+  --gold: #F59E0B;
+  --gold-lt: rgba(245,158,11,0.12);
+  --red: #EF4444;
+  --green: #10B981;
+  --white: #F0F4FF;
+  --t2: #8B9BB8;
+  --t3: #4A5568;
+  --serif: 'Noto Serif SC', serif;
+  --mono: 'JetBrains Mono', monospace;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--ink);font-family:var(--serif);min-height:100vh;}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--white); font-family:var(--serif); font-size:14px; line-height:1.6; }
 
-/* Header */
-.hdr{background:var(--ink);padding:18px 32px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--gold);}
-.hdr-l h1{color:#fff;font-size:19px;font-weight:700;letter-spacing:1.5px;}
-.hdr-l p{font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,0.35);margin-top:3px;letter-spacing:1px;}
-.hdr-r{font-family:var(--mono);font-size:9px;color:var(--gold2);border:1px solid rgba(212,160,23,0.35);padding:4px 10px;letter-spacing:1px;}
+/* ── HEADER ── */
+.site-header {
+  background:var(--bg);
+  border-bottom:1px solid var(--line);
+  padding:0 32px;
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; height:52px; gap:20px;
+}
+.site-logo { font-family:var(--mono); font-size:11px; color:var(--gold); letter-spacing:2px; }
+.site-nav { display:flex; gap:4px; margin-left:auto; }
+.nav-btn {
+  font-family:var(--mono); font-size:10px; padding:5px 12px;
+  border:1px solid var(--line); border-radius:3px;
+  background:transparent; color:var(--t2); cursor:pointer;
+  transition:all .15s; text-decoration:none; display:inline-block;
+}
+.nav-btn:hover, .nav-btn.active { background:var(--blue-lt); color:var(--blue); border-color:var(--blue); }
+.nav-btn.dl { background:var(--gold-lt); color:var(--gold); border-color:var(--gold); }
+.nav-btn.dl:hover { background:var(--gold); color:#000; }
 
-/* Sidebar + content layout */
-.layout{display:flex;min-height:calc(100vh - 58px);}
+/* ── HERO ── */
+.hero {
+  padding:52px 32px 40px;
+  border-bottom:1px solid var(--line);
+  display:grid; grid-template-columns:1fr auto; gap:32px; align-items:end;
+  max-width:1200px; margin:0 auto;
+}
+.hero-eyebrow { font-family:var(--mono); font-size:10px; color:var(--gold); letter-spacing:3px; margin-bottom:12px; }
+.hero-title { font-size:clamp(24px,4vw,38px); font-weight:700; line-height:1.2; letter-spacing:-0.5px; }
+.hero-title em { color:var(--blue); font-style:normal; }
+.hero-sub { font-family:var(--mono); font-size:11px; color:var(--t2); margin-top:10px; line-height:1.8; }
+.hero-meta { text-align:right; }
+.hero-updated { font-family:var(--mono); font-size:10px; color:var(--t3); }
+.hero-updated strong { color:var(--t2); display:block; font-size:12px; margin-bottom:2px; }
 
-/* Sidebar */
-.sidebar{width:200px;background:var(--ink2);flex-shrink:0;padding:12px 0;}
-.sb-group{padding:8px 16px 4px;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:2px;text-transform:uppercase;}
-.sb-btn{display:flex;align-items:center;gap:8px;width:100%;padding:9px 16px;background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-align:left;transition:all 0.15s;border-left:3px solid transparent;}
-.sb-btn:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.05);}
-.sb-btn.active{color:var(--gold2);border-left-color:var(--gold2);background:rgba(212,160,23,0.08);}
-.sb-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
-.sb-divider{height:1px;background:rgba(255,255,255,0.06);margin:8px 16px;}
+/* ── MAIN LAYOUT ── */
+.wrap { max-width:1200px; margin:0 auto; padding:0 32px; }
 
-/* Main content */
-.content{flex:1;padding:24px 28px 40px;overflow-x:hidden;}
+/* ── SECTION TABS ── */
+.section-tabs { display:flex; gap:0; border-bottom:1px solid var(--line); margin:0 0 0; overflow-x:auto; }
+.stab {
+  font-family:var(--mono); font-size:11px; padding:14px 20px;
+  color:var(--t2); cursor:pointer; white-space:nowrap;
+  border-bottom:2px solid transparent; transition:all .15s;
+  background:none; border-top:none; border-left:none; border-right:none;
+}
+.stab:hover { color:var(--white); }
+.stab.active { color:var(--blue); border-bottom-color:var(--blue); }
 
-/* Panel */
-.panel{display:none;}
-.panel.active{display:block;}
+/* ── SECTION PANEL ── */
+.section-panel { display:none; padding:32px 0; }
+.section-panel.active { display:block; }
 
-/* Panel header */
-.ph{margin-bottom:18px;padding-bottom:10px;border-bottom:1.5px solid var(--ink);}
-.ph-title{font-size:16px;font-weight:700;letter-spacing:1px;}
-.ph-sub{font-family:var(--mono);font-size:10px;color:#999;margin-top:4px;}
+/* ── KPI ROW ── */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:28px; }
+.kpi {
+  background:var(--bg2); border:1px solid var(--line); border-radius:6px;
+  padding:18px 20px; position:relative; overflow:hidden;
+}
+.kpi::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--blue); }
+.kpi.gold::before { background:var(--gold); }
+.kpi.red::before { background:var(--red); }
+.kpi.green::before { background:var(--green); }
+.kpi-label { font-family:var(--mono); font-size:9px; color:var(--t2); letter-spacing:1px; margin-bottom:8px; }
+.kpi-val { font-size:26px; font-weight:700; line-height:1; font-family:var(--mono); }
+.kpi-sub { font-family:var(--mono); font-size:10px; color:var(--t3); margin-top:5px; }
+.kpi-chg { font-family:var(--mono); font-size:11px; margin-top:4px; }
+.kpi-chg.up { color:var(--green); }
+.kpi-chg.down { color:var(--red); }
 
-/* Stats row */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;}
-.stat{background:#fff;border:1px solid var(--line);border-left:3px solid var(--blue);padding:11px 13px;}
-.stat.r{border-left-color:var(--red);}
-.stat.g{border-left-color:var(--gold);}
-.stat.gr{border-left-color:var(--green);}
-.stat-lbl{font-family:var(--mono);font-size:8.5px;color:#999;letter-spacing:0.5px;margin-bottom:3px;}
-.stat-val{font-size:20px;font-weight:700;line-height:1;}
-.stat-unit{font-family:var(--mono);font-size:9px;color:#AAA;margin-top:2px;}
+/* ── CHART CARD ── */
+.chart-card { background:var(--bg2); border:1px solid var(--line); border-radius:6px; padding:24px; margin-bottom:20px; }
+.chart-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+.chart-title { font-size:14px; font-weight:600; }
+.chart-sub { font-family:var(--mono); font-size:10px; color:var(--t3); margin-top:3px; }
+.chart-ctrl { display:flex; gap:5px; }
+.range-btn { font-family:var(--mono); font-size:10px; padding:4px 10px; border:1px solid var(--line); border-radius:3px; background:transparent; color:var(--t2); cursor:pointer; transition:all .12s; }
+.range-btn:hover { color:var(--white); }
+.range-btn.on { background:var(--blue-lt); color:var(--blue); border-color:var(--blue); }
+.chart-wrap { position:relative; height:280px; }
 
-/* Chart type switcher */
-.chart-switcher{display:flex;gap:6px;margin-bottom:10px;}
-.ct-btn{font-family:var(--mono);font-size:10px;color:var(--ink3);background:var(--bg2);border:1px solid var(--line);padding:4px 12px;cursor:pointer;transition:all 0.15s;}
-.ct-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
-.ct-btn:hover:not(.active){background:var(--bg3);}
+/* ── DATA TABLE ── */
+.table-section { margin-top:40px; }
+.table-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+.table-title { font-size:15px; font-weight:600; }
+.table-actions { display:flex; gap:8px; }
+.dl-btn { font-family:var(--mono); font-size:11px; padding:6px 14px; border:1px solid var(--gold); border-radius:3px; background:var(--gold-lt); color:var(--gold); cursor:pointer; transition:all .15s; }
+.dl-btn:hover { background:var(--gold); color:#000; }
+.filter-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.filter-input { font-family:var(--mono); font-size:11px; padding:6px 12px; background:var(--bg2); border:1px solid var(--line); color:var(--white); border-radius:3px; outline:none; }
+.filter-input:focus { border-color:var(--blue); }
+.filter-select { font-family:var(--mono); font-size:11px; padding:6px 10px; background:var(--bg2); border:1px solid var(--line); color:var(--white); border-radius:3px; cursor:pointer; outline:none; }
+.table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:6px; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+thead th { background:var(--bg3); padding:10px 14px; text-align:left; font-family:var(--mono); font-size:10px; color:var(--t2); white-space:nowrap; letter-spacing:.5px; border-bottom:1px solid var(--line); cursor:pointer; user-select:none; }
+thead th:hover { color:var(--white); }
+thead th.sort-asc::after { content:' ↑'; color:var(--blue); }
+thead th.sort-desc::after { content:' ↓'; color:var(--blue); }
+tbody tr { border-bottom:1px solid rgba(42,51,71,0.6); transition:background .1s; }
+tbody tr:hover { background:var(--bg3); }
+tbody td { padding:9px 14px; color:var(--white); white-space:nowrap; }
+tbody td.num { text-align:right; font-family:var(--mono); }
+tbody td.pos { color:var(--green); font-family:var(--mono); }
+tbody td.neg { color:var(--red); font-family:var(--mono); }
+tbody td.tag { font-family:var(--mono); font-size:10px; }
+.table-footer { font-family:var(--mono); font-size:10px; color:var(--t3); padding:10px 14px; background:var(--bg2); border-top:1px solid var(--line); }
 
-/* Chart box */
-.chart-box{background:#fff;border:1px solid var(--line);padding:18px 18px 12px;margin-bottom:14px;}
-.chart-box svg{display:block;width:100%;}
+/* ── FOOTER ── */
+.site-footer { border-top:1px solid var(--line); padding:28px 32px; margin-top:60px; }
+.footer-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.footer-note { font-family:var(--mono); font-size:10px; color:var(--t3); line-height:1.8; }
+.footer-sources { font-family:var(--mono); font-size:10px; color:var(--t3); text-align:right; }
 
-/* Legend */
-.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:1px solid var(--line2);}
-.leg{font-family:var(--mono);font-size:10px;color:#666;display:flex;align-items:center;gap:6px;}
-.leg-sw{width:20px;height:3px;border-radius:1px;}
-.leg-sq{width:12px;height:12px;border-radius:2px;flex-shrink:0;}
-.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; right:24px; background:var(--bg3); border:1px solid var(--green); color:var(--green); padding:10px 18px; border-radius:4px; font-family:var(--mono); font-size:12px; opacity:0; transform:translateY(6px); transition:all .2s; z-index:999; }
+.toast.show { opacity:1; transform:none; }
 
-/* Table */
-.tbl-wrap{background:#fff;border:1px solid var(--line);overflow-x:auto;margin-bottom:14px;max-height:360px;overflow-y:auto;}
-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;}
-thead th{background:var(--ink);color:rgba(255,255,255,0.85);padding:8px 12px;text-align:center;font-size:10px;letter-spacing:0.5px;white-space:nowrap;position:sticky;top:0;z-index:2;}
-tbody tr:nth-child(even){background:var(--bg2);}
-tbody td{padding:6px 12px;text-align:center;color:var(--ink2);border-bottom:1px solid var(--line2);}
-tbody tr:hover td{background:#EAF6FD;}
-.td-y{color:var(--ink);font-weight:600;}
-.td-fc{color:var(--red);font-style:italic;}
-.td-p{color:var(--green);}
-.td-n{color:var(--red);}
-.td-note{font-size:9px;color:#AAA;}
-.td-hi{background:#FFF8E1 !important;font-weight:600;}
-
-/* Note */
-.note{background:var(--bg2);border-left:3px solid var(--gold2);padding:9px 13px;font-family:var(--mono);font-size:9.5px;color:#666;line-height:1.8;margin-bottom:14px;}
-.note b{color:var(--ink);}
-
-/* Source tag */
-.src-tag{display:inline-block;font-family:var(--mono);font-size:9px;color:var(--blue2);background:var(--blue3);padding:2px 8px;border-radius:1px;margin-right:4px;}
+@media (max-width:600px) {
+  .hero { grid-template-columns:1fr; }
+  .wrap, .site-header, .site-footer { padding-left:16px; padding-right:16px; }
+  .hero { padding:32px 16px 24px; }
+}
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <div class="hdr-l">
-    <h1>中国教育数据仪表盘</h1>
-    <p>CHINA EDUCATION DATA DASHBOARD · 2000—2029 · VIBE CODING DEMO</p>
-  </div>
-  <div class="hdr-r">教育部 / 国家统计局</div>
-</div>
+<!-- HEADER -->
+<header class="site-header">
+  <div class="site-logo">CHINA MACRO DATA · 中国宏观经济数据</div>
+  <nav class="site-nav">
+    <a class="nav-btn active" href="#dashboard">仪表盘</a>
+    <a class="nav-btn" href="#table-section">数据表</a>
+    <button class="nav-btn dl" onclick="downloadAllCSV()">⬇ 下载全部 CSV</button>
+  </nav>
+</header>
 
-<div class="layout">
-
-<!-- Sidebar -->
-<nav class="sidebar">
-  <div class="sb-group">高考</div>
-  <button class="sb-btn active" onclick="show('gaokao')"><span class="sb-icon">📋</span>高考报名人数</button>
-  <button class="sb-btn" onclick="show('rate')"><span class="sb-icon">📊</span>高考录取率</button>
-  <div class="sb-divider"></div>
-  <div class="sb-group">中学阶段</div>
-  <button class="sb-btn" onclick="show('hs_stack')"><span class="sb-icon">📊</span>高中/中职毕业生</button>
-  <div class="sb-divider"></div>
-  <div class="sb-group">高等教育</div>
-  <button class="sb-btn" onclick="show('cgrad')"><span class="sb-icon">🎓</span>本专科毕业生</button>
-  <div class="sb-divider"></div>
-  <div class="sb-group">数据表</div>
-  <button class="sb-btn" onclick="show('table_all')"><span class="sb-icon">🗂</span>全数据总览表</button>
-</nav>
-
-<!-- Content -->
-<div class="content">
-
-<!-- ① 高考报名人数 -->
-<div id="p-gaokao" class="panel active">
-  <div class="ph"><div class="ph-title">全国高考报名人数（2000—2026年）</div><div class="ph-sub">单位：万人 · <span class="src-tag">教育部</span>官方公告逐年发布</div></div>
-  <div class="stats">
-    <div class="stat r"><div class="stat-lbl">历史峰值</div><div class="stat-val">1342</div><div class="stat-unit">万人 · 2024年</div></div>
-    <div class="stat"><div class="stat-lbl">2026年最新</div><div class="stat-val">1290</div><div class="stat-unit">万人 · 连续第二年下降</div></div>
-    <div class="stat g"><div class="stat-lbl">2000年起点</div><div class="stat-val">375</div><div class="stat-unit">万人 · 26年增3.4倍</div></div>
-    <div class="stat gr"><div class="stat-lbl">首次破千万</div><div class="stat-val">2007</div><div class="stat-unit">年 · 1010万人</div></div>
-  </div>
-  <div class="chart-box"><svg id="svg-gaokao" viewBox="0 0 820 320"></svg>
-    <div class="legend">
-      <div class="leg"><div class="leg-sw" style="background:var(--blue)"></div>高考报名人数</div>
-      <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>历史峰值 2024年</div>
-      <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>关键节点</div>
+<!-- HERO -->
+<div class="wrap">
+  <div class="hero" id="dashboard">
+    <div>
+      <div class="hero-eyebrow">CHINA MACROECONOMIC DASHBOARD · 2000—2025</div>
+      <div class="hero-title">中国宏观经济<br><em>核心指标数据库</em></div>
+      <div class="hero-sub">
+        国家统计局 · 中国人民银行 · 海关总署 · 教育部<br>
+        CPI · GDP · 进出口 · PMI · 人口 · 失业率 · M2 · 固定资产投资
+      </div>
+    </div>
+    <div class="hero-meta">
+      <div class="hero-updated"><strong>数据截至</strong>2025年</div>
+      <div class="hero-updated" style="margin-top:6px"><strong>数据集</strong>8个核心指标</div>
+      <div class="hero-updated" style="margin-top:6px"><strong>来源</strong>官方统计机构</div>
     </div>
   </div>
-  <div class="tbl-wrap"><table id="t-gaokao"></table></div>
 </div>
 
-<!-- ② 录取率 -->
-<div id="p-rate" class="panel">
-  <div class="ph"><div class="ph-title">高考录取率（2000—2024年）</div><div class="ph-sub">毛录取率 = 招生人数 ÷ 高考报名人数 · <span class="src-tag">教育部</span><span class="src-tag">国家统计局</span></div></div>
-  <div class="stats">
-    <div class="stat r"><div class="stat-lbl">本专科合计峰值</div><div class="stat-val">92.9%</div><div class="stat-unit">2021年</div></div>
-    <div class="stat"><div class="stat-lbl">本专科合计 2024</div><div class="stat-val">79.6%</div><div class="stat-unit">较峰值回落13.3ppt</div></div>
-    <div class="stat g"><div class="stat-lbl">本科录取率 2024</div><div class="stat-val">37.3%</div><div class="stat-unit">2000年仅28.9%</div></div>
-    <div class="stat gr"><div class="stat-lbl">2000年合计录取率</div><div class="stat-val">58.8%</div><div class="stat-unit">24年间大幅提升</div></div>
+<!-- TABS -->
+<div class="wrap">
+  <div class="section-tabs" id="tabs">
+    <button class="stab active" data-tab="cpi">CPI 物价</button>
+    <button class="stab" data-tab="gdp">GDP 经济</button>
+    <button class="stab" data-tab="trade">进出口贸易</button>
+    <button class="stab" data-tab="ppi">PPI 出厂价格</button>
+    <button class="stab" data-tab="pmi">制造业 PMI</button>
+    <button class="stab" data-tab="pop">人口</button>
+    <button class="stab" data-tab="employ">失业率</button>
+    <button class="stab" data-tab="m2">货币供应 M2</button>
+    <button class="stab" data-tab="fai">固定资产投资</button>
   </div>
-  <div class="chart-box"><svg id="svg-rate" viewBox="0 0 820 320"></svg>
-    <div class="legend">
-      <div class="leg"><div class="leg-sw" style="background:var(--blue)"></div>本专科合计录取率</div>
-      <div class="leg"><div class="leg-sw" style="background:var(--red)"></div>普通本科录取率</div>
-      <div class="leg"><div class="leg-sq" style="background:#DDD5C8;opacity:0.6"></div>专科贡献（差值）</div>
+
+  <!-- ── CPI ── -->
+  <div class="section-panel active" id="panel-cpi">
+    <div class="kpi-row" id="kpi-cpi"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">CPI 居民消费价格指数 同比变动</div><div class="chart-sub">单位：% · 国家统计局 · 月度数据</div></div>
+        <div class="chart-ctrl" id="ctrl-cpi"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-cpi"></canvas></div>
     </div>
   </div>
-  <div class="tbl-wrap"><table id="t-rate"></table></div>
-</div>
 
-<!-- ③ 高中中职堆积柱形图 -->
-<div id="p-hs_stack" class="panel">
-  <div class="ph"><div class="ph-title">普通高中 & 中职毕业生（2000—2024年）</div><div class="ph-sub">单位：万人 · 普通高中（上）/ 中职（下）· <span class="src-tag">教育部</span></div></div>
-  <div class="stats">
-    <div class="stat r"><div class="stat-lbl">合计峰值</div><div class="stat-val">1484</div><div class="stat-unit">万人 · 2013年</div></div>
-    <div class="stat"><div class="stat-lbl">合计 2024</div><div class="stat-val">1307</div><div class="stat-unit">万人</div></div>
-    <div class="stat g"><div class="stat-lbl">合计 2000</div><div class="stat-val">778</div><div class="stat-unit">万人</div></div>
-    <div class="stat gr"><div class="stat-lbl">普高超越中职</div><div class="stat-val">2004</div><div class="stat-unit">年 · 首次逆转</div></div>
-  </div>
-  <div class="chart-box"><svg id="svg-hs-stack" viewBox="0 0 820 340"></svg>
-    <div class="legend">
-      <div class="leg"><div class="leg-sq" style="background:var(--blue)"></div>普通高中毕业生（上层）</div>
-      <div class="leg"><div class="leg-sq" style="background:var(--orange)"></div>中职毕业生（下层）</div>
+  <!-- ── GDP ── -->
+  <div class="section-panel" id="panel-gdp">
+    <div class="kpi-row" id="kpi-gdp"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">GDP 实际增速</div><div class="chart-sub">单位：% · 国家统计局 · 年度数据</div></div>
+        <div class="chart-ctrl" id="ctrl-gdp"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-gdp"></canvas></div>
     </div>
   </div>
-  <div class="note"><b>口径说明：</b>2021年起中职不含技工学校，红色虚线标示口径调整节点，前后不可直接对比。</div>
-  <div class="tbl-wrap"><table id="t-hs"></table></div>
-</div>
 
-<!-- ④ 本专科毕业生 -->
-<div id="p-cgrad" class="panel">
-  <div class="ph"><div class="ph-title">全国普通本专科毕业生人数（2000—2029年）</div><div class="ph-sub">单位：万人 · 2026—2029年为估算预测值 · <span class="src-tag">教育部</span><span class="src-tag">国家统计局</span></div></div>
-  <div class="stats">
-    <div class="stat r"><div class="stat-lbl">2025年实际值</div><div class="stat-val">1105</div><div class="stat-unit">万人 · 国家统计局</div></div>
-    <div class="stat"><div class="stat-lbl">2029年预测</div><div class="stat-val">~1210</div><div class="stat-unit">万人 · 估算</div></div>
-    <div class="stat g"><div class="stat-lbl">2000年起点</div><div class="stat-val">95</div><div class="stat-unit">万人 · 29年增12倍</div></div>
-    <div class="stat gr"><div class="stat-lbl">首破千万</div><div class="stat-val">2022</div><div class="stat-unit">年 · 967→1059万</div></div>
-  </div>
-  <div class="chart-box"><svg id="svg-cgrad" viewBox="0 0 820 320"></svg>
-    <div class="legend">
-      <div class="leg"><div class="leg-sw" style="background:var(--blue)"></div>实际值</div>
-      <div class="leg"><div class="leg-sw" style="background:var(--red);border-top:2px dashed var(--red);background:none"></div>预测值（2026—2029）</div>
-      <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>关键节点</div>
+  <!-- ── TRADE ── -->
+  <div class="section-panel" id="panel-trade">
+    <div class="kpi-row" id="kpi-trade"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">中国外贸进出口同比变化（以美元计）</div>
+          <div class="chart-sub">单位：% · 海关总署 · 月度数据 · 2026-05 最新</div>
+        </div>
+        <div class="chart-ctrl" id="ctrl-trade"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-trade"></canvas></div>
+    </div>
+    <div class="chart-card" style="margin-top:16px">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">月度进出口金额（亿美元）</div>
+          <div class="chart-sub">出口 / 进口 / 贸易顺差 · 海关总署</div>
+        </div>
+        <div class="chart-ctrl" id="ctrl-trade2"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-trade2"></canvas></div>
     </div>
   </div>
-  <div class="note"><b>预测方法：</b>依据2021—2025年招生数据（本科4年制、专科3年制），结合2022年后招生增速放缓趋势推算。仅供参考。</div>
-  <div class="tbl-wrap"><table id="t-cgrad"></table></div>
+
+  <!-- ── PPI ── -->
+  <div class="section-panel" id="panel-ppi">
+    <div class="kpi-row" id="kpi-ppi"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">PPI 工业生产者出厂价格指数 同比变化</div>
+          <div class="chart-sub">单位：% · 国家统计局 · 月度数据 · 2026-04 最新</div>
+        </div>
+        <div class="chart-ctrl" id="ctrl-ppi"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-ppi"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── PMI ── -->
+  <div class="section-panel" id="panel-pmi">
+    <div class="kpi-row" id="kpi-pmi"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">制造业采购经理人指数 PMI</div><div class="chart-sub">荣枯线 = 50 · 国家统计局 · 月度数据</div></div>
+        <div class="chart-ctrl" id="ctrl-pmi"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-pmi"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── POP ── -->
+  <div class="section-panel" id="panel-pop">
+    <div class="kpi-row" id="kpi-pop"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">出生率与死亡率</div><div class="chart-sub">单位：‰ · 国家统计局 / 国家卫健委 · 年度数据</div></div>
+        <div class="chart-ctrl" id="ctrl-pop"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-pop"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── EMPLOY ── -->
+  <div class="section-panel" id="panel-employ">
+    <div class="kpi-row" id="kpi-employ"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">城镇调查失业率</div><div class="chart-sub">单位：% · 国家统计局 · 月度数据</div></div>
+        <div class="chart-ctrl" id="ctrl-employ"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-employ"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── M2 ── -->
+  <div class="section-panel" id="panel-m2">
+    <div class="kpi-row" id="kpi-m2"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">广义货币供应量 M2</div><div class="chart-sub">单位：万亿元 · 中国人民银行 · 年度数据</div></div>
+        <div class="chart-ctrl" id="ctrl-m2"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-m2"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── FAI ── -->
+  <div class="section-panel" id="panel-fai">
+    <div class="kpi-row" id="kpi-fai"></div>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">全社会固定资产投资</div><div class="chart-sub">单位：万亿元 · 国家统计局 · 年度数据</div></div>
+        <div class="chart-ctrl" id="ctrl-fai"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-fai"></canvas></div>
+    </div>
+  </div>
 </div>
 
-<!-- ⑤ 全数据总览表 -->
-<div id="p-table_all" class="panel">
-  <div class="ph"><div class="ph-title">全数据总览表</div><div class="ph-sub">所有数据集汇总 · 点击列标题排序 · <span class="src-tag">教育部</span><span class="src-tag">国家统计局</span></div></div>
-  <div class="tbl-wrap"><table id="t-all"></table></div>
+<!-- DATA TABLE -->
+<div class="wrap table-section" id="table-section">
+  <div class="table-head">
+    <div class="table-title">全数据总览表</div>
+    <div class="table-actions">
+      <button class="dl-btn" onclick="downloadCurrentCSV()">⬇ 下载当前视图 CSV</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <input class="filter-input" id="filterText" placeholder="搜索指标、年份…" oninput="renderTable()">
+    <select class="filter-select" id="filterDS" onchange="renderTable()">
+      <option value="">全部数据集</option>
+      <option value="CPI">CPI</option>
+      <option value="GDP">GDP</option>
+      <option value="进出口">进出口</option>
+      <option value="PMI">PMI</option>
+      <option value="人口">人口</option>
+      <option value="失业率">失业率</option>
+      <option value="M2">M2</option>
+      <option value="固定资产">固定资产</option>
+    </select>
+    <select class="filter-select" id="filterYear" onchange="renderTable()">
+      <option value="">全部年份</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table id="mainTable">
+      <thead><tr id="tableHead"></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="table-footer" id="tableFooter"></div>
+  </div>
 </div>
 
-</div><!-- /content -->
-</div><!-- /layout -->
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-note">
+      数据来源：国家统计局 · 中国人民银行 · 海关总署 · 国家卫健委<br>
+      本页数据仅供参考，以官方发布为准 · Caixin Global Data Team
+    </div>
+    <div class="footer-sources">
+      stats.gov.cn · pbc.gov.cn<br>customs.gov.cn · nhc.gov.cn
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// 数据库
+// ══════════════════════════════════════════════════════════════
+const DB = {
 
-const gaokaoD=[
-  {y:2000,v:375},{y:2001,v:454},{y:2002,v:510},{y:2003,v:613},{y:2004,v:729},
-  {y:2005,v:877},{y:2006,v:950},{y:2007,v:1010},{y:2008,v:1050},{y:2009,v:1020},
-  {y:2010,v:946},{y:2011,v:933},{y:2012,v:915},{y:2013,v:912},{y:2014,v:939},
-  {y:2015,v:942},{y:2016,v:940},{y:2017,v:940},{y:2018,v:975},{y:2019,v:1031},
-  {y:2020,v:1071},{y:2021,v:1078},{y:2022,v:1193},{y:2023,v:1291},
-  {y:2024,v:1342},{y:2025,v:1335},{y:2026,v:1290}
-];
+cpi: {
+  name:"CPI居民消费价格指数",
+  unit:"同比%",
+  source:"国家统计局",
+  freq:"月度",
+  // 月度同比，基期上年=100，此处存储同比变动值（%）
+  data:[
+    {t:"2015-01",v:0.8},{t:"2015-03",v:1.4},{t:"2015-06",v:1.4},{t:"2015-09",v:1.6},{t:"2015-12",v:1.6},
+    {t:"2016-01",v:1.8},{t:"2016-03",v:2.3},{t:"2016-06",v:1.9},{t:"2016-09",v:1.9},{t:"2016-12",v:2.1},
+    {t:"2017-01",v:2.5},{t:"2017-03",v:0.9},{t:"2017-06",v:1.5},{t:"2017-09",v:1.6},{t:"2017-12",v:1.8},
+    {t:"2018-01",v:1.5},{t:"2018-03",v:2.1},{t:"2018-06",v:1.9},{t:"2018-09",v:2.5},{t:"2018-12",v:1.9},
+    {t:"2019-01",v:1.7},{t:"2019-03",v:2.3},{t:"2019-06",v:2.7},{t:"2019-09",v:3.0},{t:"2019-12",v:4.5},
+    {t:"2020-01",v:5.4},{t:"2020-03",v:4.3},{t:"2020-06",v:2.5},{t:"2020-09",v:1.7},{t:"2020-12",v:-0.2},
+    {t:"2021-01",v:-0.3},{t:"2021-03",v:0.4},{t:"2021-06",v:1.1},{t:"2021-09",v:0.7},{t:"2021-12",v:1.5},
+    {t:"2022-01",v:0.9},{t:"2022-03",v:1.5},{t:"2022-06",v:2.5},{t:"2022-09",v:2.8},{t:"2022-12",v:1.8},
+    {t:"2023-01",v:2.1},{t:"2023-03",v:0.7},{t:"2023-06",v:0.0},{t:"2023-09",v:0.0},{t:"2023-12",v:-0.3},
+    {t:"2024-01",v:-0.8},{t:"2024-03",v:0.1},{t:"2024-06",v:0.2},{t:"2024-09",v:0.4},{t:"2024-12",v:0.1},
+    {t:"2025-01",v:0.5},{t:"2025-02",v:-0.7},{t:"2025-03",v:-0.1},{t:"2025-04",v:-0.1},{t:"2025-05",v:-0.1},
+    {t:"2025-06",v:0.1},{t:"2025-07",v:0.0},{t:"2025-08",v:-0.4},{t:"2025-09",v:-0.3},{t:"2025-10",v:0.2},
+    {t:"2025-11",v:0.7},{t:"2025-12",v:0.8},
+    {t:"2026-01",v:0.2},{t:"2026-02",v:1.3},{t:"2026-03",v:1.0},{t:"2026-04",v:1.2},{t:"2026-05",v:1.2},
+  ]
+},
 
-const rateD=[
-  {y:2000,total:220.6, bk:108.6, exam:375},
-  {y:2001,total:268.3, bk:128.8, exam:454},
-  {y:2002,total:320.5, bk:153.1, exam:510},
-  {y:2003,total:382.2, bk:178.1, exam:613},
-  {y:2004,total:447.3, bk:213.0, exam:729},
-  {y:2005,total:504.5, bk:236.2, exam:877},
-  {y:2006,total:546.1, bk:260.0, exam:950},
-  {y:2007,total:565.9, bk:275.2, exam:1010},
-  {y:2008,total:607.7, bk:302.8, exam:1050},
-  {y:2009,total:639.5, bk:317.4, exam:1020},
-  {y:2010,total:661.8, bk:330.4, exam:946},
-  {y:2011,total:681.5, bk:339.7, exam:933},
-  {y:2012,total:688.8, bk:343.5, exam:915},
-  {y:2013,total:699.8, bk:353.9, exam:912},
-  {y:2014,total:721.4, bk:368.1, exam:939},
-  {y:2015,total:737.8, bk:383.5, exam:942},
-  {y:2016,total:748.6, bk:391.7, exam:940},
-  {y:2017,total:761.5, bk:404.6, exam:940},
-  {y:2018,total:790.99,bk:422.16,exam:975},
-  {y:2019,total:914.90,bk:431.4, exam:1031},
-  {y:2020,total:967.45,bk:443.12,exam:1071},
-  {y:2021,total:1001.32,bk:448.74,exam:1078},
-  {y:2022,total:1014.5,bk:467.94,exam:1193},
-  {y:2023,total:1042.2,bk:487.15,exam:1291},
-  {y:2024,total:1068.9,bk:500.93,exam:1342},
-];
-rateD.forEach(d=>{d.rT=d.total/d.exam;d.rB=d.bk/d.exam;});
+gdp: {
+  name:"GDP国内生产总值",
+  unit:"增速%",
+  source:"国家统计局",
+  freq:"年度",
+  data:[
+    {t:"2000",v:8.5},{t:"2001",v:8.3},{t:"2002",v:9.1},{t:"2003",v:10.0},{t:"2004",v:10.1},
+    {t:"2005",v:11.4},{t:"2006",v:12.7},{t:"2007",v:14.2},{t:"2008",v:9.7},{t:"2009",v:9.4},
+    {t:"2010",v:10.6},{t:"2011",v:9.5},{t:"2012",v:7.9},{t:"2013",v:7.8},{t:"2014",v:7.4},
+    {t:"2015",v:7.0},{t:"2016",v:6.8},{t:"2017",v:6.9},{t:"2018",v:6.7},{t:"2019",v:6.0},
+    {t:"2020",v:2.3},{t:"2021",v:8.1},{t:"2022",v:3.0},{t:"2023",v:5.2},{t:"2024",v:5.0},
+  ],
+  extra:[
+    {name:"GDP总量（万亿元）",data:[
+      {t:"2000",v:10.0},{t:"2001",v:11.1},{t:"2002",v:12.2},{t:"2003",v:13.7},{t:"2004",v:16.2},
+      {t:"2005",v:18.7},{t:"2006",v:21.9},{t:"2007",v:26.6},{t:"2008",v:31.9},{t:"2009",v:34.9},
+      {t:"2010",v:41.3},{t:"2011",v:48.9},{t:"2012",v:54.0},{t:"2013",v:59.3},{t:"2014",v:64.4},
+      {t:"2015",v:68.9},{t:"2016",v:74.4},{t:"2017",v:83.2},{t:"2018",v:91.9},{t:"2019",v:98.7},
+      {t:"2020",v:101.6},{t:"2021",v:114.4},{t:"2022",v:121.0},{t:"2023",v:126.1},{t:"2024",v:134.9},
+    ]}
+  ]
+},
 
-const hsD=[
-  {y:2000,hs:301.5, zz:476.7},{y:2001,hs:340.5, zz:430.6},{y:2002,hs:383.8, zz:380.1},
-  {y:2003,hs:458.1, zz:346.4},{y:2004,hs:560.8, zz:359.2},{y:2005,hs:674.0, zz:418.2},
-  {y:2006,hs:739.5, zz:479.1},{y:2007,hs:804.8, zz:530.9},{y:2008,hs:845.4, zz:580.7},
-  {y:2009,hs:833.5, zz:624.9},{y:2010,hs:803.5, zz:665.0},{y:2011,hs:809.9, zz:660.0},
-  {y:2012,hs:803.1, zz:674.6},{y:2013,hs:809.4, zz:674.4},{y:2014,hs:812.0, zz:622.9},
-  {y:2015,hs:803.9, zz:567.9},{y:2016,hs:797.0, zz:533.6},{y:2017,hs:779.6, zz:496.9},
-  {y:2018,hs:779.2, zz:487.3},{y:2019,hs:791.4, zz:493.5},{y:2020,hs:786.5, zz:484.9},
-  {y:2021,hs:780.2, zz:375.4,brk:true},{y:2022,hs:824.1, zz:399.3},
-  {y:2023,hs:860.4, zz:415.5},{y:2024,hs:890.99,zz:415.55}
-];
+trade: {
+  name:"货物进出口贸易额",
+  unit:"亿元",
+  source:"海关总署",
+  freq:"年度",
+  data:[
+    {t:"2000",v:39273,v1:18638,v2:20634},{t:"2005",v:116922,v1:62648,v2:54274},
+    {t:"2010",v:201722,v1:107022,v2:94700},{t:"2015",v:245502,v1:141167,v2:104335},
+    {t:"2020",v:321556,v1:179328,v2:142228},{t:"2021",v:391009,v1:217348,v2:173661},
+    {t:"2022",v:420678,v1:239654,v2:181024},{t:"2023",v:417568,v1:237726,v2:179842},
+    {t:"2024",v:434190,v1:249700,v2:184490},
+  ]
+},
 
-const cgradD=[
-  {y:2000,v:95.0},{y:2001,v:103.6},{y:2002,v:133.7},{y:2003,v:187.7},
-  {y:2004,v:239.1},{y:2005,v:306.8},{y:2006,v:377.5},{y:2007,v:447.8},
-  {y:2008,v:511.9},{y:2009,v:531.1},{y:2010,v:575.4},{y:2011,v:608.2},
-  {y:2012,v:624.7},{y:2013,v:638.7},{y:2014,v:659.4},{y:2015,v:680.9},
-  {y:2016,v:704.2},{y:2017,v:735.8},{y:2018,v:753.3},{y:2019,v:758.5},
-  {y:2020,v:797.2},{y:2021,v:826.5},{y:2022,v:967.3},{y:2023,v:1047.0},
-  {y:2024,v:1059.4},{y:2025,v:1105.1},
-  {y:2026,v:1150,fc:true},{y:2027,v:1180,fc:true},{y:2028,v:1200,fc:true},{y:2029,v:1210,fc:true}
-];
+trade_monthly: [
+  {t:"2025-01",exp_yoy:6.0,  imp_yoy:-16.5},
+  {t:"2025-02",exp_yoy:-3.0, imp_yoy:1.5},
+  {t:"2025-03",exp_yoy:12.4, imp_yoy:-4.3},
+  {t:"2025-04",exp_yoy:8.1,  imp_yoy:-0.2},
+  {t:"2025-05",exp_yoy:4.8,  imp_yoy:-3.4},
+  {t:"2025-06",exp_yoy:5.8,  imp_yoy:1.1},
+  {t:"2025-07",exp_yoy:7.2,  imp_yoy:4.1},
+  {t:"2025-08",exp_yoy:4.4,  imp_yoy:1.3},
+  {t:"2025-09",exp_yoy:8.3,  imp_yoy:7.4},
+  {t:"2025-10",exp_yoy:-1.1, imp_yoy:1.0},
+  {t:"2025-11",exp_yoy:5.9,  imp_yoy:1.9},
+  {t:"2025-12",exp_yoy:6.6,  imp_yoy:5.7},
+  {t:"2026-01",exp_yoy:9.8,  imp_yoy:25.9},
+  {t:"2026-02",exp_yoy:39.6, imp_yoy:13.8},
+  {t:"2026-03",exp_yoy:2.5,  imp_yoy:27.8},
+  {t:"2026-04",exp_yoy:14.1, imp_yoy:25.3},
+  {t:"2026-05",exp_yoy:19.4, imp_yoy:27.4},
+],
 
-// ═══════════════════════════════════════════════════════════════
-// SVG HELPERS
-// ═══════════════════════════════════════════════════════════════
 
-const NS='http://www.w3.org/2000/svg';
-function el(tag,a={}){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e;}
-function tx(x,y,s,a={}){const t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',y);Object.entries(a).forEach(([k,v])=>t.setAttribute(k,v));t.textContent=s;return t;}
+ppi: {
+  name:"PPI工业生产者出厂价格指数",
+  unit:"同比%",
+  source:"国家统计局",
+  freq:"月度",
+  data:[
+    {t:"2016-01",v:-5.3},{t:"2016-06",v:-2.6},{t:"2016-12",v:5.5},
+    {t:"2017-01",v:6.9},{t:"2017-06",v:5.5},{t:"2017-12",v:4.9},
+    {t:"2018-01",v:4.3},{t:"2018-06",v:4.7},{t:"2018-12",v:0.9},
+    {t:"2019-01",v:0.1},{t:"2019-06",v:0.0},{t:"2019-12",v:-0.5},
+    {t:"2020-01",v:0.1},{t:"2020-06",v:-3.0},{t:"2020-12",v:-0.4},
+    {t:"2021-01",v:0.3},{t:"2021-06",v:8.8},{t:"2021-12",v:10.3},
+    {t:"2022-01",v:9.1},{t:"2022-06",v:6.1},{t:"2022-12",v:-0.7},
+    {t:"2023-01",v:-0.8},{t:"2023-06",v:-5.4},{t:"2023-12",v:-2.7},
+    {t:"2024-01",v:-2.5},{t:"2024-06",v:-0.8},{t:"2024-12",v:-2.3},
+    {t:"2025-01",v:-2.3},{t:"2025-02",v:-2.2},{t:"2025-03",v:-2.5},{t:"2025-04",v:-2.7},{t:"2025-05",v:-3.3},
+    {t:"2025-06",v:-3.6},{t:"2025-07",v:-3.6},{t:"2025-08",v:-2.9},{t:"2025-09",v:-2.3},{t:"2025-10",v:-2.1},
+    {t:"2025-11",v:-2.2},{t:"2025-12",v:-1.9},
+    {t:"2026-01",v:-1.4},{t:"2026-02",v:-0.9},{t:"2026-03",v:0.5},{t:"2026-04",v:2.8},
+  ]
+},
 
-const W=820,H_S=320,H_B=340;
-const P={top:36,right:46,bottom:46,left:60};
+pmi: {
+  name:"制造业PMI",
+  unit:"指数",
+  source:"国家统计局",
+  freq:"月度",
+  data:[
+    {t:"2015-01",v:49.8},{t:"2015-03",v:50.1},{t:"2015-06",v:50.2},{t:"2015-09",v:49.8},{t:"2015-12",v:49.7},
+    {t:"2016-01",v:49.4},{t:"2016-03",v:50.2},{t:"2016-06",v:50.0},{t:"2016-09",v:50.4},{t:"2016-12",v:51.4},
+    {t:"2017-01",v:51.3},{t:"2017-03",v:51.8},{t:"2017-06",v:51.7},{t:"2017-09",v:52.4},{t:"2017-12",v:51.6},
+    {t:"2018-01",v:51.3},{t:"2018-03",v:51.5},{t:"2018-06",v:51.5},{t:"2018-09",v:50.8},{t:"2018-12",v:49.4},
+    {t:"2019-01",v:49.5},{t:"2019-03",v:50.5},{t:"2019-06",v:49.4},{t:"2019-09",v:49.8},{t:"2019-12",v:50.2},
+    {t:"2020-01",v:50.0},{t:"2020-02",v:35.7},{t:"2020-03",v:52.0},{t:"2020-06",v:50.9},{t:"2020-09",v:51.5},{t:"2020-12",v:51.9},
+    {t:"2021-01",v:51.3},{t:"2021-03",v:51.9},{t:"2021-06",v:50.9},{t:"2021-09",v:49.6},{t:"2021-12",v:50.3},
+    {t:"2022-01",v:50.1},{t:"2022-03",v:49.5},{t:"2022-04",v:47.4},{t:"2022-06",v:50.2},{t:"2022-09",v:50.1},{t:"2022-12",v:47.0},
+    {t:"2023-01",v:50.1},{t:"2023-03",v:51.9},{t:"2023-06",v:49.0},{t:"2023-09",v:50.2},{t:"2023-12",v:49.0},
+    {t:"2024-01",v:49.2},{t:"2024-03",v:50.8},{t:"2024-06",v:49.5},{t:"2024-09",v:49.8},{t:"2024-12",v:50.1},
+    {t:"2025-01",v:50.1},{t:"2025-03",v:50.5},{t:"2025-06",v:49.7},{t:"2025-09",v:50.3},
+  ]
+},
 
-function cW(w=W){return w-P.left-P.right;}
-function cH(h){return h-P.top-P.bottom;}
+pop: {
+  name:"人口出生死亡率",
+  unit:"‰",
+  source:"国家统计局/卫健委",
+  freq:"年度",
+  data:[
+    {t:"2000",v:14.03,v1:6.45,v2:7.58},{t:"2001",v:13.38,v1:6.43,v2:6.95},
+    {t:"2002",v:12.86,v1:6.41,v2:6.45},{t:"2003",v:12.41,v1:6.40,v2:6.01},
+    {t:"2004",v:11.93,v1:6.42,v2:5.51},{t:"2005",v:12.40,v1:6.51,v2:5.89},
+    {t:"2006",v:12.09,v1:6.81,v2:5.28},{t:"2007",v:12.10,v1:6.93,v2:5.17},
+    {t:"2008",v:12.14,v1:7.06,v2:5.08},{t:"2009",v:11.95,v1:7.08,v2:4.87},
+    {t:"2010",v:11.90,v1:7.11,v2:4.79},{t:"2011",v:11.93,v1:7.14,v2:4.79},
+    {t:"2012",v:12.10,v1:7.15,v2:4.95},{t:"2013",v:12.08,v1:7.16,v2:4.92},
+    {t:"2014",v:12.37,v1:7.16,v2:5.21},{t:"2015",v:12.07,v1:7.11,v2:4.96},
+    {t:"2016",v:12.95,v1:7.09,v2:5.86},{t:"2017",v:12.43,v1:7.11,v2:5.32},
+    {t:"2018",v:10.94,v1:7.13,v2:3.81},{t:"2019",v:10.48,v1:7.14,v2:3.34},
+    {t:"2020",v:8.52,v1:7.07,v2:1.45},{t:"2021",v:7.52,v1:7.18,v2:0.34},
+    {t:"2022",v:6.77,v1:7.37,v2:-0.60},{t:"2023",v:6.39,v1:7.87,v2:-1.48},
+    {t:"2024",v:6.49,v1:7.87,v2:-1.38},
+  ]
+},
 
-function mkGrid(svg,yVals,xS,yS,lfmt,h=H_S){
-  const ch=cH(h);
-  yVals.forEach(v=>{
-    const y=yS(v);
-    svg.appendChild(el('line',{x1:P.left,x2:P.left+cW(),y1:y,y2:y,stroke:'#E5DFD8','stroke-width':'0.7','stroke-dasharray':'4 3'}));
-    svg.appendChild(tx(P.left-9,y+4,lfmt(v),{'text-anchor':'end','font-size':'9.5','font-family':'JetBrains Mono,monospace',fill:'#AAA'}));
-  });
-  svg.appendChild(el('line',{x1:P.left,x2:P.left+cW(),y1:P.top+ch,y2:P.top+ch,stroke:'#1A1A2E','stroke-width':'1.2'}));
-}
+employ: {
+  name:"城镇调查失业率",
+  unit:"%",
+  source:"国家统计局",
+  freq:"月度",
+  data:[
+    {t:"2018-01",v:5.0},{t:"2018-06",v:4.8},{t:"2018-12",v:4.9},
+    {t:"2019-01",v:5.1},{t:"2019-06",v:5.1},{t:"2019-12",v:5.2},
+    {t:"2020-01",v:5.3},{t:"2020-02",v:6.2},{t:"2020-03",v:5.9},{t:"2020-06",v:5.7},{t:"2020-09",v:5.4},{t:"2020-12",v:5.2},
+    {t:"2021-01",v:5.4},{t:"2021-03",v:5.3},{t:"2021-06",v:5.0},{t:"2021-09",v:4.9},{t:"2021-12",v:5.1},
+    {t:"2022-01",v:5.1},{t:"2022-03",v:5.8},{t:"2022-04",v:6.1},{t:"2022-06",v:5.5},{t:"2022-09",v:5.2},{t:"2022-12",v:5.5},
+    {t:"2023-01",v:5.5},{t:"2023-03",v:5.3},{t:"2023-06",v:5.2},{t:"2023-09",v:5.0},{t:"2023-12",v:5.1},
+    {t:"2024-01",v:5.1},{t:"2024-03",v:5.2},{t:"2024-06",v:5.0},{t:"2024-09",v:5.1},{t:"2024-12",v:5.1},
+    {t:"2025-01",v:5.1},{t:"2025-03",v:5.2},{t:"2025-06",v:5.1},{t:"2025-09",v:5.0},
+  ]
+},
 
-function mkXLabels(svg,data,xS,skip,h=H_S){
-  const ch=cH(h);
-  data.forEach((d,i)=>{
-    if(skip&&skip(d,i))return;
-    const x=xS(i);
-    svg.appendChild(el('line',{x1:x,x2:x,y1:P.top+ch,y2:P.top+ch+4,stroke:'#CCC','stroke-width':'1'}));
-    svg.appendChild(tx(x,P.top+ch+15,d.y,{'text-anchor':'middle','font-size':'9.5','font-family':'JetBrains Mono,monospace',fill:'#999'}));
-  });
-}
+m2: {
+  name:"广义货币供应量M2",
+  unit:"万亿元",
+  source:"中国人民银行",
+  freq:"年度",
+  data:[
+    {t:"2000",v:13.5},{t:"2001",v:15.3},{t:"2002",v:18.5},{t:"2003",v:22.1},{t:"2004",v:25.3},
+    {t:"2005",v:29.9},{t:"2006",v:34.6},{t:"2007",v:40.3},{t:"2008",v:47.5},{t:"2009",v:61.0},
+    {t:"2010",v:72.6},{t:"2011",v:85.2},{t:"2012",v:97.4},{t:"2013",v:110.7},{t:"2014",v:122.8},
+    {t:"2015",v:139.2},{t:"2016",v:155.0},{t:"2017",v:167.7},{t:"2018",v:182.7},{t:"2019",v:198.7},
+    {t:"2020",v:218.7},{t:"2021",v:238.3},{t:"2022",v:266.4},{t:"2023",v:292.3},{t:"2024",v:316.8},
+  ]
+},
 
-function mkArea(svg,pts,gid,baseY){
-  const n=pts.length;
-  svg.appendChild(el('polygon',{
-    points:`${pts[0][0]},${baseY} ${pts.map(p=>p.join(',')).join(' ')} ${pts[n-1][0]},${baseY}`,
-    fill:`url(#${gid})`}));
-}
+fai: {
+  name:"全社会固定资产投资",
+  unit:"万亿元",
+  source:"国家统计局",
+  freq:"年度",
+  data:[
+    {t:"2000",v:3.3},{t:"2001",v:3.7},{t:"2002",v:4.3},{t:"2003",v:5.6},{t:"2004",v:7.0},
+    {t:"2005",v:8.9},{t:"2006",v:11.0},{t:"2007",v:13.7},{t:"2008",v:17.2},{t:"2009",v:22.5},
+    {t:"2010",v:27.8},{t:"2011",v:31.1},{t:"2012",v:37.5},{t:"2013",v:44.6},{t:"2014",v:50.2},
+    {t:"2015",v:55.2},{t:"2016",v:59.7},{t:"2017",v:63.2},{t:"2018",v:63.6},{t:"2019",v:56.1},
+    {t:"2020",v:52.7},{t:"2021",v:54.5},{t:"2022",v:57.2},{t:"2023",v:57.4},{t:"2024",v:50.3},
+  ]
+},
 
-function mkLine(svg,pts,color,dashed=false,sw='2.3'){
-  const pl=el('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:color,'stroke-width':sw,'stroke-linejoin':'round','stroke-linecap':'round'});
-  if(dashed)pl.setAttribute('stroke-dasharray','7 4');
-  svg.appendChild(pl);
-}
+};
 
-function mkGrad(defs,id,c1,c2,op1='0.18',op2='0.02'){
-  const g=el('linearGradient',{id,x1:'0',y1:'0',x2:'0',y2:'1'});
-  g.appendChild(el('stop',{'offset':'0%','stop-color':c1,'stop-opacity':op1}));
-  g.appendChild(el('stop',{'offset':'100%','stop-color':c2,'stop-opacity':op2}));
-  defs.appendChild(g);
-}
+// ══════════════════════════════════════════════════════════════
+// CHART COLORS
+// ══════════════════════════════════════════════════════════════
+const COLORS = {
+  blue:'#3B82F6', gold:'#F59E0B', green:'#10B981',
+  red:'#EF4444', purple:'#8B5CF6', teal:'#06B6D4',
+};
 
-function mkBarGrad(defs,id,c1,c2){
-  const g=el('linearGradient',{id,x1:'0',y1:'0',x2:'0',y2:'1'});
-  g.appendChild(el('stop',{'offset':'0%','stop-color':c1,'stop-opacity':'1'}));
-  g.appendChild(el('stop',{'offset':'100%','stop-color':c2,'stop-opacity':'1'}));
-  defs.appendChild(g);
-}
+const chartInstances = {};
 
-function dot(svg,x,y,r,fill,stroke='white'){
-  svg.appendChild(el('circle',{cx:x,cy:y,r,fill,stroke,'stroke-width':'1.8'}));
-}
-
-function annotate(svg,x,y,label,val,dx,dy,color){
-  dot(svg,x,y,5,color);
-  svg.appendChild(el('line',{x1:x,y1:y,x2:x+dx*0.5,y2:y+dy*0.5,stroke:color,'stroke-width':'0.9','stroke-dasharray':'3 2',opacity:'0.7'}));
-  const lx=x+dx,ly=y+dy,bx=dx<0?lx-76:lx;
-  svg.appendChild(el('rect',{x:bx-2,y:ly-14,width:80,height:27,fill:'white',opacity:'0.93',rx:'2'}));
-  svg.appendChild(tx(bx,ly-2,label,{'font-size':'9.5','font-family':'JetBrains Mono,monospace',fill:color,'font-weight':'600'}));
-  svg.appendChild(tx(bx,ly+10,val,{'font-size':'9','font-family':'JetBrains Mono,monospace',fill:'#666'}));
-}
-
-// ═══════════════════════════════════════════════════════════════
-// CHART BUILDERS
-// ═══════════════════════════════════════════════════════════════
-
-function buildGaokao(){
-  const svg=document.getElementById('svg-gaokao');
-  const d=gaokaoD,n=d.length;
-  const xS=i=>P.left+(i/(n-1))*cW();
-  const minV=300,maxV=1450;
-  const yS=v=>P.top+cH(H_S)-((v-minV)/(maxV-minV))*cH(H_S);
-  const defs=el('defs');mkGrad(defs,'gg','#00ADEF','#00ADEF');svg.appendChild(defs);
-  mkGrid(svg,[400,600,800,1000,1200,1400],xS,yS,v=>v);
-  svg.appendChild(tx(P.left+4,yS(1000)-5,'1000万门槛',{'font-size':'8.5','font-family':'JetBrains Mono,monospace',fill:'#D0C8C0'}));
-  mkXLabels(svg,d,xS,d=>d.y%2!==0);
-  const pts=d.map((dd,i)=>[xS(i),yS(dd.v)]);
-  mkArea(svg,pts,'gg',P.top+cH(H_S));
-  mkLine(svg,pts,'#00ADEF');
-  d.forEach((dd,i)=>{if(![2007,2008,2009,2021,2024,2025,2026].includes(dd.y))dot(svg,xS(i),yS(dd.v),2,'#00ADEF','#00ADEF');});
-  const fi=y=>d.findIndex(dd=>dd.y===y);
-  annotate(svg,xS(fi(2008)),yS(1050),'2008年','1050万',6,-32,'#B8860B');
-  annotate(svg,xS(fi(2021)),yS(1078),'2021年','1078万',-78,-28,'#B8860B');
-  annotate(svg,xS(fi(2024)),yS(1342),'峰值','1342万',-78,-28,'#C0392B');
-  annotate(svg,xS(fi(2026)),yS(1290),'2026年','1290万',-78,26,'#888');
-}
-
-function buildRate(){
-  const svg=document.getElementById('svg-rate');
-  const d=rateD,n=d.length;
-  const xS=i=>P.left+(i/(n-1))*cW();
-  const minV=0.2,maxV=1.0;
-  const yS=v=>P.top+cH(H_S)-((v-minV)/(maxV-minV))*cH(H_S);
-  const defs=el('defs');mkGrad(defs,'grT','#00ADEF','#00ADEF');mkGrad(defs,'grB','#C0392B','#C0392B','0.12','0.02');svg.appendChild(defs);
-  mkGrid(svg,[0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0],xS,yS,v=>Math.round(v*100)+'%');
-  mkXLabels(svg,d,xS,d=>d.y%2!==0);
-  const ptsT=d.map((dd,i)=>[xS(i),yS(dd.rT)]);
-  const ptsB=d.map((dd,i)=>[xS(i),yS(dd.rB)]);
-  // band
-  const bPts=`${ptsT.map(p=>p.join(',')).join(' ')} ${[...ptsB].reverse().map(p=>p.join(',')).join(' ')}`;
-  svg.appendChild(el('polygon',{points:bPts,fill:'#DDD5C8',opacity:'0.4'}));
-  mkArea(svg,ptsT,'grT',P.top+cH(H_S));
-  mkArea(svg,ptsB,'grB',P.top+cH(H_S));
-  mkLine(svg,ptsT,'#00ADEF');
-  mkLine(svg,ptsB,'#C0392B','','2.0');
-  d.forEach((dd,i)=>{
-    if(![2000,2019,2021,2024].includes(dd.y)){
-      dot(svg,xS(i),yS(dd.rT),2,'#00ADEF','#00ADEF');
-      dot(svg,xS(i),yS(dd.rB),2,'#C0392B','#C0392B');
+function makeChart(id, labels, datasets, opts={}) {
+  if (chartInstances[id]) chartInstances[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+  chartInstances[id] = new Chart(ctx, {
+    type: opts.type || 'line',
+    data: { labels, datasets },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ labels:{ color:'#8B9BB8', font:{ family:"'JetBrains Mono'", size:11 }, boxWidth:12 } },
+        tooltip:{ backgroundColor:'#1E2535', borderColor:'#2A3347', borderWidth:1,
+          titleColor:'#F0F4FF', bodyColor:'#8B9BB8',
+          titleFont:{ family:"'JetBrains Mono'", size:11 },
+          bodyFont:{ family:"'JetBrains Mono'", size:11 },
+        }
+      },
+      scales:{
+        x:{ grid:{ color:'rgba(42,51,71,0.5)' }, ticks:{ color:'#4A5568', font:{ family:"'JetBrains Mono'", size:10 }, maxTicksLimit:12 } },
+        y:{ grid:{ color:'rgba(42,51,71,0.5)' }, ticks:{ color:'#4A5568', font:{ family:"'JetBrains Mono'", size:10 } },
+          ...(opts.yExtra||{}) },
+        ...(opts.y2 ? { y2:{ position:'right', grid:{ drawOnChartArea:false }, ticks:{ color:'#4A5568', font:{ family:"'JetBrains Mono'", size:10 } }, ...opts.y2 }} : {})
+      },
+      ...(opts.extra||{})
     }
   });
-  const fi=y=>d.findIndex(dd=>dd.y===y);
-  annotate(svg,xS(fi(2000)),yS(d[0].rT),'2000年','58.8%',-6,-36,'#00ADEF');
-  annotate(svg,xS(fi(2019)),yS(d[fi(2019)].rT),'专科扩招','88.7%',6,-32,'#B8860B');
-  annotate(svg,xS(fi(2021)),yS(d[fi(2021)].rT),'峰值','92.9%',-78,-28,'#C0392B');
-  annotate(svg,xS(fi(2024)),yS(d[fi(2024)].rB),'本科 2024','37.3%',6,-30,'#C0392B');
 }
 
-function buildHSStack(){
-  const svg=document.getElementById('svg-hs-stack');
-  const d=hsD,n=d.length;
-  const ch=cH(H_B);
-  const barW=Math.floor(cW()/n*0.72);
-  const xC=i=>P.left+(i+0.5)*(cW()/n);
-  const yMax=1600;
-  const yS=v=>P.top+ch-(v/yMax)*ch;
-  const defs=el('defs');
-  mkBarGrad(defs,'gbHS','#33BFFF','#0090C8');
-  mkBarGrad(defs,'gbZZ','#F09070','#C05530');
-  svg.appendChild(defs);
-  // bg
-  svg.appendChild(el('rect',{x:P.left,y:P.top,width:cW(),height:ch,fill:'#FDFAF6'}));
-  // grid
-  [200,400,600,800,1000,1200,1400].forEach(v=>{
-    const y=yS(v);
-    svg.appendChild(el('line',{x1:P.left,x2:P.left+cW(),y1:y,y2:y,stroke:'#E5DFD8','stroke-width':'0.7','stroke-dasharray':'4 3'}));
-    svg.appendChild(tx(P.left-9,y+4,v,{'text-anchor':'end','font-size':'9.5','font-family':'JetBrains Mono,monospace',fill:'#AAA'}));
-  });
-  svg.appendChild(el('line',{x1:P.left,x2:P.left+cW(),y1:P.top+ch,y2:P.top+ch,stroke:'#1A1A2E','stroke-width':'1.3'}));
-  // bars
-  d.forEach((dd,i)=>{
-    const x=xC(i),bx=x-barW/2;
-    const baseY=P.top+ch;
-    const zzH=dd.zz/yMax*ch, hsH=dd.hs/yMax*ch;
-    const zzTop=baseY-zzH, hsTop=baseY-zzH-hsH;
-    svg.appendChild(el('rect',{x:bx,y:zzTop,width:barW,height:zzH,fill:'url(#gbZZ)'}));
-    svg.appendChild(el('rect',{x:bx,y:hsTop,width:barW,height:hsH,fill:'url(#gbHS)'}));
-    svg.appendChild(el('line',{x1:bx,x2:bx+barW,y1:zzTop,y2:zzTop,stroke:'white','stroke-width':'1'}));
-    // x label
-    svg.appendChild(tx(x,P.top+ch+14,dd.y,{'text-anchor':'middle','font-size':'8.5','font-family':'JetBrains Mono,monospace',fill:'#888',transform:`rotate(-45,${x},${P.top+ch+14})`}));
-  });
-  // 2021 break
-  const i21=d.findIndex(dd=>dd.brk);
-  const xmid=(xC(i21-1)+barW/2+2+xC(i21)-barW/2-2)/2;
-  svg.appendChild(el('line',{x1:xmid,x2:xmid,y1:P.top,y2:P.top+ch+4,stroke:'#C0392B','stroke-width':'1.2','stroke-dasharray':'5 3',opacity:'0.75'}));
-  svg.appendChild(el('rect',{x:xmid-26,y:P.top+2,width:52,height:15,fill:'#FAF7F2',opacity:'0.92',rx:'2'}));
-  svg.appendChild(tx(xmid,P.top+12,'口径调整',{'text-anchor':'middle','font-size':'8.5','font-family':'JetBrains Mono,monospace',fill:'#C0392B'}));
-  // in-bar labels at year 2010
-  const i10=d.findIndex(dd=>dd.y===2010);
-  const dm=d[i10], xm=xC(i10);
-  svg.appendChild(tx(xm,P.top+ch-dm.zz/2/yMax*ch+3,'中职',{'text-anchor':'middle','font-size':'9','font-family':'JetBrains Mono,monospace',fill:'rgba(255,255,255,0.9)','font-weight':'600'}));
-  svg.appendChild(tx(xm,yS(dm.zz)-dm.hs/2/yMax*ch+3,'普通高中',{'text-anchor':'middle','font-size':'9','font-family':'JetBrains Mono,monospace',fill:'rgba(255,255,255,0.9)','font-weight':'600'}));
-  // annotate key years
-  function annotBar(i,side){
-    const dd=d[i],x=xC(i);
-    const yTop=yS(dd.hs+dd.zz);
-    dot(svg,x,yTop,4,'#1A1A2E');
-    const bx=side==='r'?x+barW/2+8:x-barW/2-88;
-    svg.appendChild(el('rect',{x:bx-2,y:yTop-38,width:86,height:40,fill:'white',opacity:'0.93',rx:'2'}));
-    svg.appendChild(tx(bx,yTop-25,dd.y+'年',{'font-size':'9.5','font-family':'JetBrains Mono,monospace',fill:'#1A1A2E','font-weight':'600'}));
-    svg.appendChild(tx(bx,yTop-14,`合计 ${(dd.hs+dd.zz).toFixed(0)}万`,{'font-size':'9','font-family':'JetBrains Mono,monospace',fill:'#444'}));
-    svg.appendChild(tx(bx,yTop-4,`高中${dd.hs.toFixed(0)} 中职${dd.zz.toFixed(0)}`,{'font-size':'8.5','font-family':'JetBrains Mono,monospace',fill:'#888'}));
+// ══════════════════════════════════════════════════════════════
+// RANGE FILTER
+// ══════════════════════════════════════════════════════════════
+const rangeState = {};
+
+function buildRange(key, ranges, initIdx, renderFn) {
+  rangeState[key] = initIdx;
+  const ctrl = document.getElementById('ctrl-'+key);
+  ctrl.innerHTML = ranges.map((r,i) =>
+    `<button class="range-btn${i===initIdx?' on':''}" onclick="setRange('${key}',${i},this)">${r.label}</button>`
+  ).join('');
+  renderFn(ranges[initIdx]);
+}
+
+function setRange(key, idx, btn) {
+  rangeState[key] = idx;
+  btn.closest('.chart-ctrl').querySelectorAll('.range-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function filterData(data, range) {
+  if (!range || !range.from) return data;
+  return data.filter(d => d.t >= range.from);
+}
+
+// ══════════════════════════════════════════════════════════════
+// KPI BUILDER
+// ══════════════════════════════════════════════════════════════
+function buildKPI(containerId, items) {
+  document.getElementById(containerId).innerHTML = items.map(item => `
+    <div class="kpi ${item.color||''}">
+      <div class="kpi-label">${item.label}</div>
+      <div class="kpi-val" style="color:${item.valColor||'#F0F4FF'}">${item.val}</div>
+      <div class="kpi-sub">${item.sub||''}</div>
+      ${item.chg !== undefined ? `<div class="kpi-chg ${item.chg>=0?'up':'down'}">${item.chg>=0?'▲':'▼'} ${Math.abs(item.chg)} ${item.chgUnit||''}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER EACH SECTION
+// ══════════════════════════════════════════════════════════════
+
+// CPI
+function renderCPI(range) {
+  const d = filterData(DB.cpi.data, range);
+  const last = d[d.length-1], prev = d[d.length-2];
+  buildKPI('kpi-cpi',[
+    {label:'最新 CPI 同比', val:(last.v>0?'+':'')+last.v+'%', sub:last.t, valColor: last.v>3?'#EF4444':last.v<0?'#3B82F6':'#F0F4FF'},
+    {label:'上期', val:(prev.v>0?'+':'')+prev.v+'%', sub:prev.t, color:''},
+    {label:'近期峰值', val:'+5.4%', sub:'2020-01 猪肉价格推动'},
+    {label:'近期谷值', val:'-0.8%', sub:'2024-01 持续通缩压力', color:'red'},
+  ]);
+  makeChart('chart-cpi',
+    d.map(x=>x.t),
+    [{
+      label:'CPI同比(%)',
+      data: d.map(x=>x.v),
+      borderColor:COLORS.blue, backgroundColor:'rgba(59,130,246,0.08)',
+      borderWidth:2, pointRadius:2, tension:0.3, fill:true,
+    }],
+    { yExtra:{ title:{ display:true, text:'%', color:'#4A5568', font:{size:10} } } }
+  );
+  // Add zero line annotation via plugin workaround
+}
+
+// GDP
+function renderGDP(range) {
+  const d = filterData(DB.gdp.data, range);
+  const last = d[d.length-1];
+  const tot = DB.gdp.extra[0].data;
+  const lastTot = tot[tot.length-1];
+  buildKPI('kpi-gdp',[
+    {label:'2024年GDP增速', val:last.v+'%', sub:'实际增速，不变价', color:'green'},
+    {label:'2024年GDP总量', val:lastTot.v+'万亿元', sub:'现价，约18.7万亿美元'},
+    {label:'历史峰值增速', val:'14.2%', sub:'2007年'},
+    {label:'最低增速', val:'2.3%', sub:'2020年 疫情冲击', color:'red'},
+  ]);
+  const dtot = filterData(tot, range);
+  makeChart('chart-gdp',
+    d.map(x=>x.t),
+    [
+      {label:'GDP增速(%)', data:d.map(x=>x.v), borderColor:COLORS.blue, backgroundColor:'rgba(59,130,246,0.08)', borderWidth:2, pointRadius:3, tension:0.3, fill:true, yAxisID:'y'},
+      {label:'GDP总量(万亿元)', data:dtot.map(x=>x.v), borderColor:COLORS.gold, backgroundColor:'rgba(245,158,11,0.06)', borderWidth:2, pointRadius:3, tension:0.3, fill:false, yAxisID:'y2'},
+    ],
+    { y2:{ title:{display:true,text:'万亿元',color:'#4A5568',font:{size:10}} }, yExtra:{ title:{display:true,text:'%',color:'#4A5568',font:{size:10}} } }
+  );
+}
+
+// Trade — 月度同比变化（直接使用官方同比数据）
+function renderTrade(range) {
+  const raw = DB.trade_monthly || [];
+  let d = raw;
+  if (range && range.from) d = raw.filter(x => x.t >= range.from);
+
+  const last = raw[raw.length - 1];
+
+  buildKPI('kpi-trade',[
+    {label:`出口同比  ${last?.t||''}`,
+     val:(last?.exp_yoy>=0?'+':'')+last?.exp_yoy+'%',
+     sub:'以美元计，海关总署',
+     color: last?.exp_yoy>=0?'green':'red',
+     valColor: last?.exp_yoy>=0?'#10B981':'#EF4444'},
+    {label:`进口同比  ${last?.t||''}`,
+     val:(last?.imp_yoy>=0?'+':'')+last?.imp_yoy+'%',
+     sub:'以美元计，海关总署',
+     color: last?.imp_yoy>=0?'green':'red',
+     valColor: last?.imp_yoy>=0?'#10B981':'#EF4444'},
+    {label:'2026-05 出口金额', val:'3767.8 亿美元', sub:'同比 +19.4%', color:'green'},
+    {label:'2026-05 进口金额', val:'2713.5 亿美元', sub:'同比 +27.4%，顺差1054.3亿美元', color:'gold'},
+  ]);
+
+  // 同比折线图
+  makeChart('chart-trade',
+    d.map(x => x.t),
+    [
+      {label:'出口同比(%)',
+       data: d.map(x => x.exp_yoy),
+       borderColor: COLORS.green, backgroundColor:'rgba(16,185,129,0.08)',
+       borderWidth:2, pointRadius:3, tension:0.3, fill:false},
+      {label:'进口同比(%)',
+       data: d.map(x => x.imp_yoy),
+       borderColor: COLORS.gold, backgroundColor:'rgba(245,158,11,0.06)',
+       borderWidth:2, pointRadius:3, tension:0.3, fill:false},
+    ],
+    {
+      yExtra:{
+        title:{display:true, text:'%', color:'#4A5568', font:{size:10}},
+        ticks:{ callback: v => v+'%' }
+      }
+    }
+  );
+
+  // 第二个图：顺差金额（亿美元）- 单独柱状图
+  const surplusData = [
+    {t:"2025-01",sur:543},{t:"2025-02",sur:170},{t:"2025-03",sur:1027},
+    {t:"2025-04",sur:961},{t:"2025-05",sur:850},{t:"2025-06",sur:998},
+    {t:"2025-07",sur:984},{t:"2025-08",sur:916},{t:"2025-09",sur:1044},
+    {t:"2025-10",sur:952},{t:"2025-11",sur:976},{t:"2025-12",sur:1047},
+    {t:"2026-01",sur:848},{t:"2026-02",sur:658},{t:"2026-03",sur:1039},
+    {t:"2026-04",sur:1428},{t:"2026-05",sur:1054},
+  ];
+  const d2 = range?.from ? surplusData.filter(x => x.t >= range.from) : surplusData;
+  makeChart('chart-trade2', d2.map(x=>x.t),
+    [{
+      label:'贸易顺差(亿美元)',
+      data: d2.map(x=>x.sur),
+      backgroundColor: d2.map(x => x.sur > 1000 ? 'rgba(59,130,246,0.8)' : 'rgba(59,130,246,0.45)'),
+      borderColor: COLORS.blue, borderWidth:1, type:'bar',
+    }],
+    { type:'bar' }
+  );
+}
+
+
+
+// PPI
+function renderPPI(range) {
+  const d = filterData(DB.ppi.data, range);
+  const last = d[d.length-1];
+  const prev = d[d.length-2];
+  const positiveMonths = d.filter(x=>x.v>=0).length;
+  buildKPI('kpi-ppi',[
+    {label:`最新 PPI 同比  ${last?.t||''}`,
+     val:(last.v>=0?'+':'')+last.v+'%',
+     sub:'国家统计局',
+     color: last.v>=0?'green':'red',
+     valColor: last.v>=0?'#10B981':'#EF4444'},
+    {label:'2026-03 由负转正', val:'+0.5%', sub:'结束连续28个月负增长', color:'green'},
+    {label:'2026-04 进一步回升', val:'+2.8%', sub:'关税重塑供应链推动', color:'green'},
+    {label:'历史峰值', val:'+13.5%', sub:'2021-10 大宗商品上涨', color:'gold'},
+  ]);
+  makeChart('chart-ppi',
+    d.map(x=>x.t),
+    [{
+      label:'PPI同比(%)',
+      data: d.map(x=>x.v),
+      borderColor: COLORS.gold,
+      backgroundColor: d.map(x => x.v>=0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.1)'),
+      borderWidth:2, pointRadius:2, tension:0.3, fill:true,
+    }],
+    { yExtra:{ title:{display:true,text:'%',color:'#4A5568',font:{size:10}}, ticks:{ callback: v=>v+'%' } } }
+  );
+}
+
+// PMI
+function renderPMI(range) {
+  const d = filterData(DB.pmi.data, range);
+  const last = d[d.length-1];
+  const above50 = d.filter(x=>x.v>=50).length;
+  buildKPI('kpi-pmi',[
+    {label:'最新制造业PMI', val:last.v, sub:last.t+' · 荣枯线=50', color: last.v>=50?'green':'red', valColor: last.v>=50?'#10B981':'#EF4444'},
+    {label:'历史最低', val:'35.7', sub:'2020-02 疫情停工', color:'red'},
+    {label:'历史最高', val:'52.4', sub:'2017-09', color:'green'},
+    {label:'高于荣枯线月份', val:above50+'月', sub:`占比${(above50/d.length*100).toFixed(0)}%`},
+  ]);
+  makeChart('chart-pmi',
+    d.map(x=>x.t),
+    [{
+      label:'制造业PMI',
+      data:d.map(x=>x.v),
+      borderColor:COLORS.blue, backgroundColor:'rgba(59,130,246,0.08)',
+      borderWidth:2, pointRadius:2, tension:0.3, fill:true,
+    }],
+    { yExtra:{ min:44, max:55, title:{display:true,text:'指数',color:'#4A5568',font:{size:10}} } }
+  );
+}
+
+// POP
+function renderPop(range) {
+  const d = filterData(DB.pop.data, range);
+  const last = d[d.length-1];
+  buildKPI('kpi-pop',[
+    {label:'2024年出生率', val:last.v+'‰', sub:'连续下行', color: last.v<8?'red':''},
+    {label:'2024年死亡率', val:last.v1+'‰', sub:'老龄化推动上升'},
+    {label:'2024年自然增长率', val:(last.v2>0?'+':'')+last.v2+'‰', sub:'连续第三年负增长', color:'red', valColor:'#EF4444'},
+    {label:'出生率峰值', val:'17.86‰', sub:'1987年', color:'green'},
+  ]);
+  makeChart('chart-pop',
+    d.map(x=>x.t),
+    [
+      {label:'出生率(‰)', data:d.map(x=>x.v), borderColor:COLORS.blue, borderWidth:2, pointRadius:3, tension:0.3},
+      {label:'死亡率(‰)', data:d.map(x=>x.v1), borderColor:COLORS.gold, borderWidth:2, pointRadius:3, tension:0.3},
+      {label:'自然增长率(‰)', data:d.map(x=>x.v2), borderColor:COLORS.green, borderWidth:2, pointRadius:3, tension:0.3},
+    ]
+  );
+}
+
+// Employ
+function renderEmploy(range) {
+  const d = filterData(DB.employ.data, range);
+  const last = d[d.length-1];
+  buildKPI('kpi-employ',[
+    {label:'最新城镇调查失业率', val:last.v+'%', sub:last.t, color: last.v>5.5?'red':'green'},
+    {label:'历史峰值', val:'6.2%', sub:'2020-02 疫情冲击', color:'red'},
+    {label:'历史低点', val:'4.8%', sub:'2018-06', color:'green'},
+    {label:'政策目标', val:'≤5.5%', sub:'全年控制目标'},
+  ]);
+  makeChart('chart-employ',
+    d.map(x=>x.t),
+    [{
+      label:'城镇调查失业率(%)',
+      data:d.map(x=>x.v),
+      borderColor:COLORS.blue, backgroundColor:'rgba(59,130,246,0.08)',
+      borderWidth:2, pointRadius:2, tension:0.3, fill:true,
+    }],
+    { yExtra:{ min:4, max:7 } }
+  );
+}
+
+// M2
+function renderM2(range) {
+  const d = filterData(DB.m2.data, range);
+  const last = d[d.length-1], prev = d[d.length-2];
+  const yoy = ((last.v-prev.v)/prev.v*100).toFixed(1);
+  buildKPI('kpi-m2',[
+    {label:'2024年末M2余额', val:last.v+'万亿元', sub:'约44万亿美元', color:'green'},
+    {label:'同比增速', val:'+'+yoy+'%', sub:'2024年末'},
+    {label:'2000年M2', val:'13.5万亿元', sub:'24年增23倍'},
+    {label:'M2/GDP', val:'234%', sub:'2024年估算', color:'gold'},
+  ]);
+  makeChart('chart-m2',
+    d.map(x=>x.t),
+    [{
+      label:'M2余额(万亿元)',
+      data:d.map(x=>x.v),
+      borderColor:COLORS.gold, backgroundColor:'rgba(245,158,11,0.08)',
+      borderWidth:2, pointRadius:3, tension:0.3, fill:true,
+    }]
+  );
+}
+
+// FAI
+function renderFAI(range) {
+  const d = filterData(DB.fai.data, range);
+  const last = d[d.length-1];
+  buildKPI('kpi-fai',[
+    {label:'2024年固定资产投资', val:last.v+'万亿元', sub:'同比-1.3%', color:'red'},
+    {label:'峰值', val:'63.6万亿元', sub:'2018年', color:'gold'},
+    {label:'2000年', val:'3.3万亿元', sub:'24年增15倍'},
+    {label:'占GDP比', val:'37%', sub:'2024年估算'},
+  ]);
+  makeChart('chart-fai',
+    d.map(x=>x.t),
+    [{
+      label:'固定资产投资(万亿元)',
+      data:d.map(x=>x.v),
+      borderColor:COLORS.blue, backgroundColor:'rgba(59,130,246,0.08)',
+      borderWidth:2, pointRadius:3, tension:0.3, fill:true,
+    }]
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// RANGE CONFIG PER TAB
+// ══════════════════════════════════════════════════════════════
+const RANGES = {
+  monthly: [
+    {label:'近1年', from: (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,7); })()},
+    {label:'近2年', from: (() => { const d=new Date(); d.setFullYear(d.getFullYear()-2); return d.toISOString().slice(0,7); })()},
+    {label:'近5年', from: (() => { const d=new Date(); d.setFullYear(d.getFullYear()-5); return d.toISOString().slice(0,7); })()},
+    {label:'全部',  from: null},
+  ],
+  annual: [
+    {label:'近5年',  from:'2020'},
+    {label:'近10年', from:'2015'},
+    {label:'近20年', from:'2005'},
+    {label:'全部',   from:null},
+  ],
+};
+
+const TAB_CONFIG = {
+  cpi:    {ranges:RANGES.monthly, init:2, fn:renderCPI},
+  gdp:    {ranges:RANGES.annual,  init:1, fn:renderGDP},
+  trade:  {ranges:RANGES.monthly, init:2, fn:renderTrade},
+  ppi:    {ranges:RANGES.monthly, init:2, fn:renderPPI},
+  pmi:    {ranges:RANGES.monthly, init:2, fn:renderPMI},
+  pop:    {ranges:RANGES.annual,  init:2, fn:renderPop},
+  employ: {ranges:RANGES.monthly, init:2, fn:renderEmploy},
+  m2:     {ranges:RANGES.annual,  init:1, fn:renderM2},
+  fai:    {ranges:RANGES.annual,  init:1, fn:renderFAI},
+};
+
+function initTab(key) {
+  const cfg = TAB_CONFIG[key];
+  buildRange(key, cfg.ranges, cfg.init, cfg.fn);
+  // 同步第二个图表控制器（进出口金额柱状图）
+  if (key === 'trade') {
+    const ctrl2 = document.getElementById('ctrl-trade2');
+    if (ctrl2) ctrl2.innerHTML = document.getElementById('ctrl-trade').innerHTML
+      .replace(/onclick="setRange\('trade'/g, "onclick=\"setRange('trade'")
+      .replace(/id="ctrl-trade"/g, '');
   }
-  annotBar(0,'r'); annotBar(8,'r'); annotBar(12,'r');
-  annotBar(22,'l'); annotBar(24,'l');
 }
 
-function buildCGrad(){
-  const svg=document.getElementById('svg-cgrad');
-  const d=cgradD,n=d.length;
-  const xS=i=>P.left+(i/(n-1))*cW();
-  const maxV=1350;
-  const yS=v=>P.top+cH(H_S)-(v/maxV)*cH(H_S);
-  const defs=el('defs');mkGrad(defs,'gcg','#00ADEF','#00ADEF');svg.appendChild(defs);
-  mkGrid(svg,[200,400,600,800,1000,1200],xS,yS,v=>v);
-  svg.appendChild(tx(P.left+4,yS(1000)-5,'1000万',{'font-size':'8.5','font-family':'JetBrains Mono,monospace',fill:'#D0C8C0'}));
-  mkXLabels(svg,d,xS,d=>d.y%2!==0);
-  const fi=d.findIndex(dd=>dd.fc);
-  const actualPts=d.slice(0,fi+1).map((dd,i)=>[xS(i),yS(dd.v)]);
-  const fcPts=d.slice(fi-1).map((dd,i)=>[xS(fi-1+i),yS(dd.v)]);
-  mkArea(svg,actualPts,'gcg',P.top+cH(H_S));
-  mkLine(svg,actualPts,'#00ADEF');
-  mkLine(svg,fcPts,'#C0392B',true);
-  // break line
-  const xbrk=xS(fi);
-  svg.appendChild(el('line',{x1:xbrk,x2:xbrk,y1:P.top,y2:P.top+cH(H_S),stroke:'#C0392B','stroke-width':'1.1','stroke-dasharray':'4 3',opacity:'0.5'}));
-  svg.appendChild(tx(xbrk+4,P.top+14,'估算→',{'font-size':'8.5','font-family':'JetBrains Mono,monospace',fill:'#C0392B',opacity:'0.7'}));
-  d.forEach((dd,i)=>{
-    if(dd.fc)dot(svg,xS(i),yS(dd.v),3.5,'#C0392B');
-    else if(![2000,2022,2025].includes(dd.y))dot(svg,xS(i),yS(dd.v),2,'#00ADEF','#00ADEF');
+// Range button click wires to re-render
+function setRange(key, idx, btn) {
+  const cfg = TAB_CONFIG[key];
+  btn.closest('.chart-ctrl').querySelectorAll('.range-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  cfg.fn(cfg.ranges[idx]);
+}
+
+// ══════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════════
+const initializedTabs = new Set();
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const btn = e.target.closest('.stab');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (!initializedTabs.has(tab)) {
+    initializedTabs.add(tab);
+    initTab(tab);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// DATA TABLE
+// ══════════════════════════════════════════════════════════════
+let tableData = [];
+let sortCol = 0, sortDir = 1;
+
+function buildTableData() {
+  const rows = [];
+  // CPI
+  DB.cpi.data.forEach(d => rows.push({ds:'CPI', time:d.t, field:'CPI同比(%)', value:d.v, source:'国家统计局'}));
+  // GDP
+  DB.gdp.data.forEach(d => rows.push({ds:'GDP', time:d.t, field:'GDP增速(%)', value:d.v, source:'国家统计局'}));
+  DB.gdp.extra[0].data.forEach(d => rows.push({ds:'GDP', time:d.t, field:'GDP总量(万亿元)', value:d.v, source:'国家统计局'}));
+  // Trade monthly YoY
+  const tradeMonthly = DB.trade_monthly || [];
+  tradeMonthly.forEach(d => {
+    rows.push({ds:'进出口', time:d.t, field:'出口同比(%)', value:d.exp_yoy, source:'海关总署'});
+    rows.push({ds:'进出口', time:d.t, field:'进口同比(%)', value:d.imp_yoy, source:'海关总署'});
   });
-  const fid=y=>d.findIndex(dd=>dd.y===y);
-  annotate(svg,xS(fid(2000)),yS(95),'2000年','95万',6,-30,'#00ADEF');
-  annotate(svg,xS(fid(2022)),yS(967.3),'首破千万','967万',-78,-28,'#B8860B');
-  annotate(svg,xS(fid(2025)),yS(1105.1),'2025年','1105万',-78,-28,'#00ADEF');
-  annotate(svg,xS(fid(2029)),yS(1210),'预测','~1210万',-78,26,'#C0392B');
-}
-
-// ═══════════════════════════════════════════════════════════════
-// TABLE BUILDERS
-// ═══════════════════════════════════════════════════════════════
-
-function mkTbl(id,headers,rows){
-  const tbl=document.getElementById(id);
-  if(!tbl)return;
-  const thead=document.createElement('thead');
-  const hr=document.createElement('tr');
-  headers.forEach(h=>{const th=document.createElement('th');th.textContent=h;hr.appendChild(th);});
-  thead.appendChild(hr);tbl.appendChild(thead);
-  const tbody=document.createElement('tbody');
-  rows.forEach(row=>{
-    const tr=document.createElement('tr');
-    row.forEach((cell,ci)=>{
-      const td=document.createElement('td');
-      if(typeof cell==='object'&&cell!==null){td.textContent=cell.v;if(cell.cls)td.className=cell.cls;}
-      else td.textContent=cell;
-      if(ci===0)td.classList.add('td-y');
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
+  // PPI
+  (DB.ppi?.data||[]).forEach(d => rows.push({ds:'PPI', time:d.t, field:'PPI同比(%)', value:d.v, source:'国家统计局'}));
+  // PMI
+  DB.pmi.data.forEach(d => rows.push({ds:'PMI', time:d.t, field:'制造业PMI', value:d.v, source:'国家统计局'}));
+  // Pop
+  DB.pop.data.forEach(d => {
+    rows.push({ds:'人口', time:d.t, field:'出生率(‰)', value:d.v, source:'国家统计局'});
+    rows.push({ds:'人口', time:d.t, field:'死亡率(‰)', value:d.v1, source:'国家统计局'});
+    rows.push({ds:'人口', time:d.t, field:'自然增长率(‰)', value:d.v2, source:'国家统计局'});
   });
-  tbl.appendChild(tbody);
+  // Employ
+  DB.employ.data.forEach(d => rows.push({ds:'失业率', time:d.t, field:'城镇调查失业率(%)', value:d.v, source:'国家统计局'}));
+  // M2
+  DB.m2.data.forEach(d => rows.push({ds:'M2', time:d.t, field:'M2余额(万亿元)', value:d.v, source:'中国人民银行'}));
+  // FAI
+  DB.fai.data.forEach(d => rows.push({ds:'固定资产', time:d.t, field:'固定资产投资(万亿元)', value:d.v, source:'国家统计局'}));
+  return rows;
 }
 
-function fmtDiff(cur,prev){
-  if(prev==null)return{v:'—',cls:''};
-  const d=cur-prev;
-  return{v:(d>=0?'+':'')+d.toFixed(1),cls:d>=0?'td-p':'td-n'};
-}
-
-mkTbl('t-gaokao',['年份','报名人数（万）','同比变化（万）'],
-  gaokaoD.map((d,i)=>[d.y,d.v,fmtDiff(d.v,i>0?gaokaoD[i-1].v:null)]));
-
-mkTbl('t-rate',['年份','高考报名（万）','本专科招生（万）','本专科录取率','本科招生（万）','本科录取率'],
-  rateD.map(d=>[d.y,d.exam,(d.total).toFixed(2),(d.rT*100).toFixed(1)+'%',(d.bk).toFixed(2),(d.rB*100).toFixed(1)+'%']));
-
-mkTbl('t-hs',['年份','普通高中（万）','中职（万）','两者合计（万）','备注'],
-  hsD.map(d=>[d.y,d.hs.toFixed(1),d.zz.toFixed(1),(d.hs+d.zz).toFixed(1),d.brk?{v:'中职口径调整',cls:'td-note'}:'']));
-
-mkTbl('t-cgrad',['年份','毕业生（万）','同比变化（万）','数据性质'],
-  cgradD.map((d,i)=>[d.y,
-    d.fc?{v:'约'+d.v,cls:'td-fc'}:d.v.toFixed(1),
-    fmtDiff(d.v,i>0?cgradD[i-1].v:null),
-    d.fc?{v:'估算预测',cls:'td-fc'}:'实际值']));
-
-// ── 全数据总览表 ────────────────────────────────────────────────
-function buildAllTable(){
-  const years=[];
-  for(let y=2000;y<=2029;y++)years.push(y);
-  const rows=years.map(y=>{
-    const gk=gaokaoD.find(d=>d.y===y);
-    const rt=rateD.find(d=>d.y===y);
-    const hs=hsD.find(d=>d.y===y);
-    const cg=cgradD.find(d=>d.y===y);
-    const fc=cg?.fc;
-    return [
-      y,
-      gk?gk.v:'—',
-      rt?(rt.rT*100).toFixed(1)+'%':'—',
-      rt?(rt.rB*100).toFixed(1)+'%':'—',
-      hs?hs.hs.toFixed(1):'—',
-      hs?hs.zz.toFixed(1):'—',
-      cg?(fc?{v:'约'+cg.v,cls:'td-fc'}:cg.v.toFixed(1)):'—'
-    ];
+function renderTable() {
+  const q = document.getElementById('filterText').value.toLowerCase();
+  const ds = document.getElementById('filterDS').value;
+  const yr = document.getElementById('filterYear').value;
+  let rows = tableData.filter(r => {
+    const qOk = !q || (r.ds+r.time+r.field+r.value).toLowerCase().includes(q);
+    const dsOk = !ds || r.ds.includes(ds);
+    const yrOk = !yr || r.time.startsWith(yr);
+    return qOk && dsOk && yrOk;
   });
-  mkTbl('t-all',
-    ['年份','高考报名（万）','本专科录取率','本科录取率','普高毕业（万）','中职毕业（万）','本专科毕业（万）'],
-    rows);
+  rows.sort((a,b) => {
+    const av = [a.ds,a.time,a.field,a.value,a.source][sortCol];
+    const bv = [b.ds,b.time,b.field,b.value,b.source][sortCol];
+    return sortDir * (av < bv ? -1 : av > bv ? 1 : 0);
+  });
+  const cols = ['数据集','时间','指标','数值','来源'];
+  document.getElementById('tableHead').innerHTML = cols.map((c,i) =>
+    `<th class="${sortCol===i?(sortDir===1?'sort-asc':'sort-desc'):''}" onclick="sortTable(${i})">${c}</th>`
+  ).join('');
+  document.getElementById('tableBody').innerHTML = rows.map(r => `
+    <tr>
+      <td class="tag">${r.ds}</td>
+      <td class="num">${r.time}</td>
+      <td>${r.field}</td>
+      <td class="num ${r.value>0&&r.field.includes('%')?'pos':r.value<0&&r.field.includes('%')?'neg':''}">${r.value}</td>
+      <td class="tag" style="color:var(--t3)">${r.source}</td>
+    </tr>`).join('');
+  document.getElementById('tableFooter').textContent = `显示 ${rows.length} 条 / 共 ${tableData.length} 条`;
 }
-buildAllTable();
 
-// ═══════════════════════════════════════════════════════════════
-// PANEL SWITCH
-// ═══════════════════════════════════════════════════════════════
-
-function show(id){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('p-'+id).classList.add('active');
-  event.currentTarget.classList.add('active');
+function sortTable(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  renderTable();
 }
 
-// ── init all charts ────────────────────────────────────────────
-buildGaokao();
-buildRate();
-buildHSStack();
-buildCGrad();
+function buildYearFilter() {
+  const years = [...new Set(tableData.map(r => r.time.slice(0,4)))].sort().reverse();
+  document.getElementById('filterYear').innerHTML =
+    '<option value="">全部年份</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CSV EXPORT
+// ══════════════════════════════════════════════════════════════
+function downloadCurrentCSV() {
+  const q = document.getElementById('filterText').value.toLowerCase();
+  const ds = document.getElementById('filterDS').value;
+  const yr = document.getElementById('filterYear').value;
+  let rows = tableData.filter(r => {
+    const qOk = !q || (r.ds+r.time+r.field+r.value).toLowerCase().includes(q);
+    const dsOk = !ds || r.ds.includes(ds);
+    const yrOk = !yr || r.time.startsWith(yr);
+    return qOk && dsOk && yrOk;
+  });
+  exportCSV(rows, `中国宏观经济数据_${ds||'全部'}_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+function downloadAllCSV() {
+  exportCSV(tableData, `中国宏观经济数据_全部_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+function exportCSV(rows, filename) {
+  const bom = '\uFEFF';
+  const header = '数据集,时间,指标,数值,来源';
+  const body = rows.map(r=>`${r.ds},${r.time},"${r.field}",${r.value},${r.source}`).join('\n');
+  const blob = new Blob([bom+header+'\n'+body], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`✓ 已下载：${filename}`);
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  // Init first tab
+  initializedTabs.add('cpi');
+  initTab('cpi');
+  // Build table
+  tableData = buildTableData();
+  buildYearFilter();
+  renderTable();
+});
 </script>
 </body>
 </html>
